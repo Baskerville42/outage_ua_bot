@@ -65,7 +65,15 @@ export async function deleteMessage(chat_id, message_id) {
   try {
     const res = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ chat_id, message_id }) });
     const json = await res.json();
-    if (!json.ok) { console.error(`deleteMessage ERROR for ${chat_id}/${message_id}:`, JSON.stringify(json)); return { ok: false }; }
+    if (!json.ok) {
+      // Якщо повідомлення вже видалене користувачем або його не існує — вважаємо це ОК та пропускаємо без фейлу
+      if (json.error_code === 400 && typeof json.description === 'string' && json.description.toLowerCase().includes('message to delete not found')) {
+        console.warn(`SKIP deleteMessage for ${chat_id}/${message_id}: ${json.description}`);
+        return { ok: true, reason: 'already-deleted' };
+      }
+      console.error(`deleteMessage ERROR for ${chat_id}/${message_id}:`, JSON.stringify(json));
+      return { ok: false };
+    }
     console.log(`DELETED chat_id=${chat_id} message_id=${message_id} OK`);
     return { ok: true };
   } catch (err) {

@@ -96,6 +96,11 @@ async function sendPhoto(chat) {
         removeChat(String(chat.chat_id), '403 Forbidden: not a member');
         return { ok: true, chat, reason: 'unregistered' };
       }
+      // Форум-тред закрито (Bad Request: TOPIC_CLOSED) — вважаємо некритичною ситуацією: пропускаємо чат
+      if (json.error_code === 400 && typeof json.description === 'string' && json.description.includes('TOPIC_CLOSED')) {
+        console.warn(`SKIP sendPhoto for ${chat.chat_id}: ${json.description}`);
+        return { ok: true, chat, reason: 'topic-closed' };
+      }
       console.error(`sendPhoto ERROR for ${chat.chat_id}:`, JSON.stringify(json));
       return { ok: false, chat, json };
     }
@@ -135,6 +140,11 @@ async function editPhoto(chat, messageId) {
         console.log(`NOT_MODIFIED for ${chat.chat_id}/${messageId} — content same, considered OK.`);
         await pinMessage(chat.chat_id, messageId);
         return { ok: true, chat, not_modified: true };
+      }
+      // Форум-тред закрито — пропускаємо без помилки
+      if (json.error_code === 400 && typeof json.description === 'string' && json.description.includes('TOPIC_CLOSED')) {
+        console.warn(`SKIP editPhoto for ${chat.chat_id}/${messageId}: ${json.description}`);
+        return { ok: true, chat, reason: 'topic-closed' };
       }
       // Якщо 400 — наприклад, повідомлення видалене: створюємо нове
       if (json.error_code === 400) {
@@ -388,8 +398,9 @@ function updateStoredChatFields(chatId, effective) {
   const skippedNoImage = results.filter(r => r && r.reason === 'no-image').length;
   const unregistered = results.filter(r => r && r.ok && r.reason === 'unregistered').length;
   const invalidConfig = results.filter(r => r && r.reason === 'invalid-config').length;
+  const topicClosed = results.filter(r => r && r.ok && r.reason === 'topic-closed').length;
 
-  console.log(`Summary: total=${results.length}, sent_new=${sentNew}, replaced=${replacedNew}, edited=${edited}, not_modified=${notModified}, skipped_no_image=${skippedNoImage}, unregistered=${unregistered}, invalid_config=${invalidConfig}`);
+  console.log(`Summary: total=${results.length}, sent_new=${sentNew}, replaced=${replacedNew}, edited=${edited}, not_modified=${notModified}, skipped_no_image=${skippedNoImage}, unregistered=${unregistered}, invalid_config=${invalidConfig}, topic_closed=${topicClosed}`);
 
   // Фільтруємо реальні помилки (ок=false і не "invalid-config")
   const failures = results.filter(r => !r.ok && r.reason !== 'invalid-config');
