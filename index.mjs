@@ -83,6 +83,9 @@ async function sendPhoto(chat) {
     photo: photoUrl,
     caption
   };
+  if (chat.message_thread_id !== undefined) {
+    body.message_thread_id = chat.message_thread_id;
+  }
   try {
     const res = await fetch(url, {
       method: 'POST',
@@ -332,6 +335,7 @@ function updateStoredChatFields(chatId, effective) {
     const effective = {
       chat_id: chatId,
       image_url: mapCfg.image_url,
+      message_thread_id: mapCfg.message_thread_id,
       // Use custom caption if provided, otherwise fall back to default
       caption: mapCfg.caption !== undefined ? mapCfg.caption : DEFAULT_CAPTION
     };

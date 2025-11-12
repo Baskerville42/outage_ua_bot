@@ -28,6 +28,7 @@ export function loadMessageMapFromFile(filePath) {
           if (val.image_url) entry.image_url = val.image_url;
           if (Object.prototype.hasOwnProperty.call(val, 'caption')) entry.caption = val.caption;
           if (val.welcome_message_id !== undefined) entry.welcome_message_id = val.welcome_message_id;
+          if (val.message_thread_id !== undefined) entry.message_thread_id = val.message_thread_id;
           map[chatId] = entry;
         } else {
           mapWasNormalized = true; // malformed value
@@ -45,6 +46,7 @@ export function loadMessageMapFromFile(filePath) {
         if (item.image_url) entry.image_url = item.image_url;
         if (Object.prototype.hasOwnProperty.call(item, 'caption')) entry.caption = item.caption;
         if (item.welcome_message_id !== undefined) entry.welcome_message_id = item.welcome_message_id;
+        if (item.message_thread_id !== undefined) entry.message_thread_id = item.message_thread_id;
         map[chatId] = entry;
         mapWasNormalized = true; // we will rewrite to canonical
         continue;
@@ -72,6 +74,7 @@ export function saveMessageMapToFile(filePath, map) {
         if (map[k].image_url) entry.image_url = map[k].image_url;
         if (Object.prototype.hasOwnProperty.call(map[k], 'caption')) entry.caption = map[k].caption;
         if (map[k].welcome_message_id !== undefined) entry.welcome_message_id = map[k].welcome_message_id;
+        if (map[k].message_thread_id !== undefined) entry.message_thread_id = map[k].message_thread_id;
       }
       return { [k]: entry };
     });
