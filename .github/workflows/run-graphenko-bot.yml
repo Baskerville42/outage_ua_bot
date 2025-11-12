@@ -1,0 +1,43 @@
+name: Run Graphenko bot (every 5 minutes)
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-images:
+    runs-on: ubuntu-latest
+    env:
+      BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Run Telegram update script
+        run: node index.mjs
+
+      - name: Commit and push message map (if changed)
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet -- graphenko-chats.json; then
+            echo "No changes in graphenko-chats.json"
+          else
+            git add graphenko-chats.json
+            git commit -m "chore(telegram): update chats map [skip ci]"
+            git pull --rebase
+            git push
+          fi
