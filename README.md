@@ -1,6 +1,6 @@
 # GraphenkoBot (@outage_ua_bot)
 
-<img width="150" height="150" alt="graphenko_bot" src="https://github.com/user-attachments/assets/37e482ec-71ee-47b8-96b4-bb59a774b47a" />
+<img width="150" height="150" alt="graphenko_bot" src="graphenko_bot.png" />
 
 ## Коротко
 - Оновлює закріплене повідомлення із PNG‑зображенням у підключених каналах/чатах кожні 5 хвилин.
