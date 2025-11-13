@@ -69,5 +69,13 @@
       "image_url": "https://raw.githubusercontent.com/Baskerville42/outage-data-ua/refs/heads/main/images/kyiv-region/gpv-1-2-emergency.png",
       "caption": "⚡️ Графік стабілізаційних вимкнень. Це повідомлення оновлюється щогодини автоматично."
     }
+  },
+  {
+    "-1003120073107": {
+      "message_id": 264,
+      "image_url": "https://raw.githubusercontent.com/Baskerville42/outage-data-ua/refs/heads/main/images/kyiv/gpv-3-2-emergency.png",
+      "caption": "⚡️ Графік стабілізаційних вимкнень. Це повідомлення оновлюється щогодини автоматично.",
+      "welcome_message_id": 263
+    }
   }
 ]
