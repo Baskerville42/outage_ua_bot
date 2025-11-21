@@ -71,6 +71,11 @@
     }
   },
   {
+    "-5045279214": {
+      "welcome_message_id": 68
+    }
+  },
+  {
     "292472": {
       "message_id": 55,
       "image_url": "https://raw.githubusercontent.com/Baskerville42/outage-data-ua/refs/heads/main/images/kyiv-region/gpv-3-2.png",
