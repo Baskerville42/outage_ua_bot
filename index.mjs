@@ -3,7 +3,7 @@ import { MAP_FILE, API_BASE, OUTAGE_IMAGES_BASE, DEFAULT_CAPTION } from './src/c
 import { loadMessageMapFromFile, saveMessageMapToFile } from './src/storage/messageMapIO.mjs';
 import { withTimestamp } from './src/utils/time.mjs';
 import { cacheBustedUrl, isValidOutageImageUrl, verifyRemotePng } from './src/utils/url.mjs';
-import { getMe, getUpdates, ackUpdates, pinMessage, deleteMessage, sendTextMessage } from './src/telegram/api.mjs';
+import { getMe, getUpdates, ackUpdates, pinMessage, deleteMessage, sendTextMessage, sendMediaGroup } from './src/telegram/api.mjs';
 
 // Завантаження мапи chat_id -> { message_id }
 let mapWasNormalized = false;
@@ -152,6 +152,8 @@ async function editPhoto(chat, messageId) {
       // Якщо 400 — наприклад, повідомлення видалене: створюємо нове
       if (json.error_code === 400) {
         console.warn(`EDIT 400 for ${chat.chat_id}/${messageId}: ${json.description}. Will send new message.`);
+        // Спробуємо видалити старе повідомлення, щоб не засмічувати чат
+        await deleteMessage(chat.chat_id, messageId);
         const sent = await sendPhoto(chat);
         return { ...sent, replaced: true };
       }
@@ -170,6 +172,112 @@ async function editPhoto(chat, messageId) {
     console.error(`Network error editMessageMedia for ${chat.chat_id}/${messageId}:`, err.message);
     return { ok: false, chat, err };
   }
+}
+
+async function sendAlbum(chat) {
+  const images = Array.isArray(chat.image_url) ? chat.image_url : [chat.image_url];
+  const caption = withTimestamp(chat.caption);
+
+  const media = images.map((url, index) => {
+    return {
+      type: 'photo',
+      media: cacheBustedUrl(url),
+      // caption only for the first item
+      caption: index === 0 ? caption : ''
+    };
+  });
+
+  const res = await sendMediaGroup(chat.chat_id, media, { message_thread_id: chat.message_thread_id });
+  if (!res.ok) {
+    // Check for specific errors if needed
+    if (res.json && res.json.error_code === 403) {
+      removeChat(String(chat.chat_id), '403 Forbidden: not a member');
+      return { ok: true, chat, reason: 'unregistered' };
+    }
+    return { ok: false, chat, json: res.json };
+  }
+
+  // result is array of messages
+  const messages = res.result;
+  const messageIds = messages.map(m => m.message_id);
+  console.log(`SENT album for chat_id=${chat.chat_id} -> message_ids=${messageIds.join(',')}`);
+
+  // Pin the first message
+  if (messageIds.length > 0) {
+    await pinMessage(chat.chat_id, messageIds[0]);
+  }
+
+  return { ok: true, chat, message_ids: messageIds, result: res.result };
+}
+
+async function editAlbum(chat, existingMessageIds) {
+  // Editing media group is tricky. Telegram allows editing media of specific message.
+  // But we want to update the whole album. 
+  // Simplest robust approach: if we are in "Album Mode", we just edit each message in the album 
+  // with the corresponding new image.
+  // Assumption: number of images hasn't changed. If it changed, we should have re-sent.
+
+  const images = Array.isArray(chat.image_url) ? chat.image_url : [chat.image_url];
+  const caption = withTimestamp(chat.caption);
+
+  if (images.length !== existingMessageIds.length) {
+    console.warn(`Mismatch in album size for ${chat.chat_id}: config=${images.length}, stored=${existingMessageIds.length}. Will resend.`);
+    return { ok: false, reason: 'size-mismatch' };
+  }
+
+  const results = [];
+  for (let i = 0; i < images.length; i++) {
+    const msgId = existingMessageIds[i];
+    const imgUrl = images[i];
+    const isFirst = i === 0;
+
+    // We reuse editPhoto logic but need to adapt it or call editMessageMedia directly
+    // Let's call editMessageMedia directly here to avoid confusion
+    const url = `${API_BASE}/editMessageMedia`;
+    const photoUrl = cacheBustedUrl(imgUrl);
+    const payload = {
+      chat_id: chat.chat_id,
+      message_id: Number(msgId),
+      media: {
+        type: 'photo',
+        media: photoUrl,
+        caption: isFirst ? caption : ''
+      }
+    };
+
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const json = await res.json();
+
+      if (!json.ok) {
+        if (json.error_code === 400 && typeof json.description === 'string' && json.description.includes('message is not modified')) {
+          // ok
+        } else {
+          console.error(`editAlbum error for ${chat.chat_id}/${msgId}:`, json);
+          results.push({ ok: false, json });
+        }
+      } else {
+        results.push({ ok: true });
+      }
+    } catch (e) {
+      console.error(`editAlbum network error for ${chat.chat_id}/${msgId}:`, e);
+      results.push({ ok: false, err: e });
+    }
+  }
+
+  // If we are here, we attempted to edit all. 
+  // We can consider it success even if some were not modified.
+  console.log(`EDITED album for chat_id=${chat.chat_id} (count=${images.length})`);
+  // Pin first one just in case
+  if (existingMessageIds.length > 0) {
+    await pinMessage(chat.chat_id, existingMessageIds[0]);
+  }
+
+  return { ok: true, chat, result: results };
 }
 
 
@@ -312,8 +420,25 @@ function updateStoredChatFields(chatId, effective) {
   const setMessageId = (chatId, messageId) => {
     if (!messageId) return;
     if (!messageMap[chatId]) messageMap[chatId] = {};
+    // Clear array if switching to single
+    if (messageMap[chatId].message_ids) delete messageMap[chatId].message_ids;
+
     if (messageMap[chatId].message_id !== messageId) {
       messageMap[chatId].message_id = messageId;
+      mapDirty = true;
+    }
+  };
+
+  const setMessageIds = (chatId, messageIds) => {
+    if (!messageIds || !Array.isArray(messageIds)) return;
+    if (!messageMap[chatId]) messageMap[chatId] = {};
+    // Clear single if switching to array
+    if (messageMap[chatId].message_id) delete messageMap[chatId].message_id;
+
+    // Check if changed
+    const current = messageMap[chatId].message_ids || [];
+    if (current.length !== messageIds.length || !current.every((v, i) => v === messageIds[i])) {
+      messageMap[chatId].message_ids = messageIds;
       mapDirty = true;
     }
   };
@@ -353,26 +478,99 @@ function updateStoredChatFields(chatId, effective) {
       continue;
     }
 
-    const known = messageMap[chatId]?.message_id;
+    const knownSingle = messageMap[chatId]?.message_id;
+    const knownAlbum = messageMap[chatId]?.message_ids; // array of IDs
 
-    if (!known) {
-      const r = await sendPhoto(effective);
-      // If chat was unregistered during send (e.g., 403 not a member), do not touch the map further
-      if (r && r.ok && r.reason === 'unregistered') { results.push(r); continue; }
-      if (r.ok && r.message_id) setMessageId(chatId, r.message_id);
-      // Зберігаємо image_url/caption до мапи
-      updateStoredChatFields(chatId, effective);
-      results.push(r);
-    } else {
-      const r = await editPhoto(effective, known);
-      // If chat was unregistered during edit (e.g., 403 not a member), do not touch the map further
-      if (r && r.ok && r.reason === 'unregistered') { results.push(r); continue; }
-      if (r.ok && r.replaced && r.message_id) {
-        setMessageId(chatId, r.message_id);
+    const isAlbumConfig = Array.isArray(effective.image_url) && effective.image_url.length > 1;
+
+    // STATE MIGRATION / HANDLING
+
+    // Case 1: Config is Album, but we have Single stored -> Delete Single, Send Album
+    if (isAlbumConfig && knownSingle) {
+      console.log(`Switching ${chatId} from Single to Album. Deleting old message ${knownSingle}...`);
+      await deleteMessage(chatId, knownSingle);
+      // continue to send new album
+    }
+
+    // Case 2: Config is Single, but we have Album stored -> Delete Album, Send Single
+    if (!isAlbumConfig && knownAlbum) {
+      console.log(`Switching ${chatId} from Album to Single. Deleting old messages ${knownAlbum.join(',')}...`);
+      for (const mid of knownAlbum) await deleteMessage(chatId, mid);
+      // continue to send new single
+    }
+
+    // Case 3: Config is Album, we have Album stored, but size mismatch -> Delete Album, Send Album
+    if (isAlbumConfig && knownAlbum && knownAlbum.length !== effective.image_url.length) {
+      console.log(`Album size changed for ${chatId}. Deleting old messages...`);
+      for (const mid of knownAlbum) await deleteMessage(chatId, mid);
+      // continue to send new album
+    }
+
+    // Now decide action based on current clean state
+
+    // RELOAD state after potential deletions (we haven't updated map yet, but we know what we deleted)
+    // Actually simpler: if we deleted, we just treat it as "not known" for the next step.
+    // But we need to be careful not to use the old 'knownSingle' / 'knownAlbum' variables if we just deleted them.
+
+    // Let's refine:
+    let mode = 'send'; // or 'edit'
+    let currentIds = null; // single ID or array of IDs to edit
+
+    if (isAlbumConfig) {
+      if (knownAlbum && knownAlbum.length === effective.image_url.length) {
+        mode = 'edit';
+        currentIds = knownAlbum;
+      } else {
+        mode = 'send';
       }
-      // оновимо збережені image_url/caption, якщо змінилися
-      updateStoredChatFields(chatId, effective);
-      results.push(r);
+    } else {
+      // Single config
+      if (knownSingle && !isAlbumConfig) { // ensure we didn't just decide to delete it
+        // wait, if we had knownSingle and isAlbumConfig was true, we deleted it.
+        // so if isAlbumConfig is false, and we have knownSingle, we edit.
+        mode = 'edit';
+        currentIds = knownSingle;
+      } else {
+        mode = 'send';
+      }
+    }
+
+    // Override mode if we just performed a deletion logic above
+    if (isAlbumConfig && knownSingle) mode = 'send';
+    if (!isAlbumConfig && knownAlbum) mode = 'send';
+    if (isAlbumConfig && knownAlbum && knownAlbum.length !== effective.image_url.length) mode = 'send';
+
+    if (mode === 'send') {
+      if (isAlbumConfig) {
+        const r = await sendAlbum(effective);
+        if (r && r.ok && r.reason === 'unregistered') { results.push(r); continue; }
+        if (r.ok && r.message_ids) setMessageIds(chatId, r.message_ids);
+        updateStoredChatFields(chatId, effective);
+        results.push(r);
+      } else {
+        const r = await sendPhoto(effective);
+        if (r && r.ok && r.reason === 'unregistered') { results.push(r); continue; }
+        if (r.ok && r.message_id) setMessageId(chatId, r.message_id);
+        updateStoredChatFields(chatId, effective);
+        results.push(r);
+      }
+    } else {
+      // Edit
+      if (isAlbumConfig) {
+        const r = await editAlbum(effective, currentIds);
+        // if edit failed due to size mismatch (should be caught above) or other fatal, we might want to resend?
+        // For now, simple edit.
+        updateStoredChatFields(chatId, effective);
+        results.push(r);
+      } else {
+        const r = await editPhoto(effective, currentIds);
+        if (r && r.ok && r.reason === 'unregistered') { results.push(r); continue; }
+        if (r.ok && r.replaced && r.message_id) {
+          setMessageId(chatId, r.message_id);
+        }
+        updateStoredChatFields(chatId, effective);
+        results.push(r);
+      }
     }
 
     // невелика пауза, щоб не спамити API

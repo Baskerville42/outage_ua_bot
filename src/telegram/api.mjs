@@ -49,7 +49,7 @@ export async function ackUpdates(lastUpdateId) {
 export async function pinMessage(chat_id, message_id) {
   const url = `${API_BASE}/pinChatMessage`;
   try {
-    const res = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ chat_id, message_id, disable_notification:true }) });
+    const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id, message_id, disable_notification: true }) });
     const json = await res.json();
     if (!json.ok) { console.error(`pinChatMessage ERROR for ${chat_id}/${message_id}:`, JSON.stringify(json)); return { ok: false }; }
     console.log(`PINNED chat_id=${chat_id} message_id=${message_id} OK`);
@@ -63,7 +63,7 @@ export async function pinMessage(chat_id, message_id) {
 export async function deleteMessage(chat_id, message_id) {
   const url = `${API_BASE}/deleteMessage`;
   try {
-    const res = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ chat_id, message_id }) });
+    const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id, message_id }) });
     const json = await res.json();
     if (!json.ok) {
       // Якщо повідомлення вже видалене користувачем або його не існує — вважаємо це ОК та пропускаємо без фейлу
@@ -99,6 +99,30 @@ export async function sendTextMessage(chat_id, text) {
     return { ok: true, result: json.result };
   } catch (err) {
     console.error(`Network error sendMessage for ${chat_id}:`, err.message);
+    return { ok: false, err };
+  }
+}
+
+export async function sendMediaGroup(chat_id, media, options = {}) {
+  const url = `${API_BASE}/sendMediaGroup`;
+  const body = { chat_id, media };
+  if (options.message_thread_id) {
+    body.message_thread_id = options.message_thread_id;
+  }
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    const json = await res.json();
+    if (!json.ok) {
+      console.error(`sendMediaGroup ERROR for ${chat_id}:`, JSON.stringify(json));
+      return { ok: false, json };
+    }
+    return { ok: true, result: json.result };
+  } catch (err) {
+    console.error(`Network error sendMediaGroup for ${chat_id}:`, err.message);
     return { ok: false, err };
   }
 }

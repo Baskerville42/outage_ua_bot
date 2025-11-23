@@ -25,6 +25,7 @@ export function loadMessageMapFromFile(filePath) {
           if (val.deleted === true) { mapWasNormalized = true; continue; }
           const entry = {};
           if (val.message_id !== undefined) entry.message_id = val.message_id;
+          if (val.message_ids !== undefined) entry.message_ids = val.message_ids;
           if (val.image_url) entry.image_url = val.image_url;
           if (Object.prototype.hasOwnProperty.call(val, 'caption')) entry.caption = val.caption;
           if (val.welcome_message_id !== undefined) entry.welcome_message_id = val.welcome_message_id;
@@ -43,6 +44,7 @@ export function loadMessageMapFromFile(filePath) {
         if (item.deleted === true) { mapWasNormalized = true; continue; }
         const entry = {};
         if (item.message_id !== undefined) entry.message_id = item.message_id;
+        if (item.message_ids !== undefined) entry.message_ids = item.message_ids;
         if (item.image_url) entry.image_url = item.image_url;
         if (Object.prototype.hasOwnProperty.call(item, 'caption')) entry.caption = item.caption;
         if (item.welcome_message_id !== undefined) entry.welcome_message_id = item.welcome_message_id;
@@ -71,6 +73,7 @@ export function saveMessageMapToFile(filePath, map) {
       const entry = {};
       if (map[k] && typeof map[k] === 'object') {
         if (map[k].message_id !== undefined) entry.message_id = map[k].message_id;
+        if (map[k].message_ids !== undefined) entry.message_ids = map[k].message_ids;
         if (map[k].image_url) entry.image_url = map[k].image_url;
         if (Object.prototype.hasOwnProperty.call(map[k], 'caption')) entry.caption = map[k].caption;
         if (map[k].welcome_message_id !== undefined) entry.welcome_message_id = map[k].welcome_message_id;
