@@ -83,11 +83,6 @@
     }
   },
   {
-    "-1003317572379": {
-      "welcome_message_id": 4
-    }
-  },
-  {
     "-1003332243633": {
       "message_id": 15,
       "image_url": "https://raw.githubusercontent.com/Baskerville42/outage-data-ua/refs/heads/main/images/kyiv-region/gpv-2-1-emergency.png",
@@ -103,11 +98,6 @@
     }
   },
   {
-    "-1003426894596": {
-      "welcome_message_id": 17
-    }
-  },
-  {
     "-1003576748183": {
       "message_id": 9,
       "image_url": "https://raw.githubusercontent.com/Baskerville42/outage-data-ua/refs/heads/main/images/dnipro/gpv-4-2-summary.png",
@@ -120,20 +110,6 @@
       "message_id": 13,
       "image_url": "https://raw.githubusercontent.com/Baskerville42/outage-data-ua/refs/heads/main/images/kyiv/gpv-2-1-emergency.png",
       "caption": "test"
-    }
-  },
-  {
-    "-2071650634562": {}
-  },
-  {
-    "-2071659023650": {}
-  },
-  {
-    "-2073375608603": {}
-  },
-  {
-    "-5045279214": {
-      "welcome_message_id": 68
     }
   },
   {
