@@ -71,7 +71,10 @@
   },
   {
     "-1002232329186": {
-      "message_id": 698,
+      "message_ids": [
+        700,
+        701
+      ],
       "image_url": [
         "https://raw.githubusercontent.com/Baskerville42/outage-data-ua/refs/heads/main/images/kyiv-region/gpv-all-today.png",
         "https://raw.githubusercontent.com/Baskerville42/outage-data-ua/refs/heads/main/images/kyiv-region/gpv-all-tomorrow.png"
