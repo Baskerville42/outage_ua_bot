@@ -42,6 +42,11 @@
     }
   },
   {
+    "-1001838896197": {
+      "welcome_message_id": 501
+    }
+  },
+  {
     "-1002142116428": {
       "message_id": 19,
       "image_url": "https://raw.githubusercontent.com/Baskerville42/outage-data-ua/refs/heads/main/images/dnipro/gpv-3-1-emergency.png",
