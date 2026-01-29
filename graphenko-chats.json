@@ -28,13 +28,6 @@
     }
   },
   {
-    "-1001790220865": {
-      "message_id": 1835,
-      "image_url": "https://raw.githubusercontent.com/Baskerville42/outage-data-ua/refs/heads/main/images/kyiv/gpv-3-2.png",
-      "caption": "⚡️ Графік відключень групи 3.2 Це повідомлення оновлюється щогодини автоматично."
-    }
-  },
-  {
     "-1001805736209": {
       "message_id": 1752,
       "image_url": "https://raw.githubusercontent.com/Baskerville42/outage-data-ua/refs/heads/main/images/kyiv-region/gpv-2-2-emergency.png",
