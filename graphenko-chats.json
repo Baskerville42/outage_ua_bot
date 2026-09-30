@@ -29,7 +29,7 @@
   },
   {
     "-1002142116428": {
-      "message_id": 19,
+      "message_id": 21,
       "image_url": "https://raw.githubusercontent.com/Baskerville42/outage-data-ua/refs/heads/main/images/dnipro/gpv-3-1-emergency.png",
       "caption": "⚡️ Графік стабілізаційних вимкнень. Це повідомлення оновлюється щогодини автоматично."
     }
@@ -108,6 +108,11 @@
       "message_id": 229,
       "image_url": "https://raw.githubusercontent.com/Baskerville42/outage-data-ua/refs/heads/main/images/dnipro/gpv-all-today.png",
       "caption": "⚡️ Графік стабілізаційних вимкнень. Це повідомлення оновлюється щогодини автоматично."
+    }
+  },
+  {
+    "-1004325807490": {
+      "welcome_message_id": 2
     }
   },
   {
