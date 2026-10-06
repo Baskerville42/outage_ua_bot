@@ -1,8 +1,6 @@
 name: Run Graphenko bot (every 5 minutes)
 
 on:
-  schedule:
-    - cron: '*/5 * * * *'
   workflow_dispatch:
 
 permissions:
