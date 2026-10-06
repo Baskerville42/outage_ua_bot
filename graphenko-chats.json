@@ -28,6 +28,14 @@
     }
   },
   {
+    "-1002101862701": {
+      "message_id": 1674,
+      "image_url": "https://raw.githubusercontent.com/Baskerville42/outage-data-ua/refs/heads/main/images/kyiv/gpv-18-1-emergency.png",
+      "caption": "⚡️ Графік стабілізаційних вимкнень. Це повідомлення оновлюється щогодини автоматично.",
+      "welcome_message_id": 1673
+    }
+  },
+  {
     "-1002142116428": {
       "message_id": 21,
       "image_url": "https://raw.githubusercontent.com/Baskerville42/outage-data-ua/refs/heads/main/images/dnipro/gpv-3-1-emergency.png",
@@ -122,6 +130,9 @@
       ],
       "caption": "⚡️ Графік стабілізаційних вимкнень. Це повідомлення оновлюється щогодини автоматично."
     }
+  },
+  {
+    "-2072101862701": {}
   },
   {
     "1044121183": {
