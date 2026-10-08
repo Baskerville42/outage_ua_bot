@@ -34,6 +34,7 @@
 - Кеш‑бастинг: до URL додається ?cb=<timestamp>, щоб обійти кеш Telegram.
 - Якщо "message is not modified" — вважається успішно; бот усе одно перевіряє пін.
 - Якщо API повертає 403 (бот більше не в каналі) або отримано my_chat_member зі статусом left/kicked — канал автоматично розреєстровується (видаляється з файлу).
+- Помилка `400: need administrator rights in the channel chat` під час надсилання або редагування фото/альбому також видаляє канал із конфігурації без зупинки workflow. Відсутність лише права закріплення повідомлень не видаляє чат.
 
 ## Конфіг (graphenko-chats.json)
 - Формат: масив об’єктів `{ "<chat_id>": { image_url?, caption?, message_id?, welcome_message_id?, message_thread_id? } }`.

@@ -31,6 +31,14 @@ function removeChat(chatId, reason = '') {
   return false;
 }
 
+function removeChatWithoutAdminRights(chatId, json) {
+  if (json?.error_code !== 400 || typeof json.description !== 'string' ||
+      !json.description.toLowerCase().includes('need administrator rights in the channel chat')) {
+    return false;
+  }
+  return removeChat(String(chatId), json.description);
+}
+
 // --- Telegram helpers for auto-registration via long polling ---
 
 function registerFromUpdates(updates) {
@@ -94,6 +102,9 @@ async function sendPhoto(chat) {
     });
     const json = await res.json();
     if (!json.ok) {
+      if (removeChatWithoutAdminRights(chat.chat_id, json)) {
+        return { ok: true, chat, reason: 'unregistered' };
+      }
       // Якщо бота прибрали з каналу — приберемо запис і не вважатимемо це збоєм
       if (json.error_code === 403 && typeof json.description === 'string' && json.description.toLowerCase().includes('not a member')) {
         removeChat(String(chat.chat_id), '403 Forbidden: not a member');
@@ -138,6 +149,9 @@ async function editPhoto(chat, messageId) {
     });
     const json = await res.json();
     if (!json.ok) {
+      if (removeChatWithoutAdminRights(chat.chat_id, json)) {
+        return { ok: true, chat, reason: 'unregistered' };
+      }
       // Обробка "message is not modified" як не-критичної ситуації
       if (json.error_code === 400 && typeof json.description === 'string' && json.description.includes('message is not modified')) {
         console.log(`NOT_MODIFIED for ${chat.chat_id}/${messageId} — content same, considered OK.`);
@@ -189,6 +203,9 @@ async function sendAlbum(chat) {
 
   const res = await sendMediaGroup(chat.chat_id, media, { message_thread_id: chat.message_thread_id });
   if (!res.ok) {
+    if (removeChatWithoutAdminRights(chat.chat_id, res.json)) {
+      return { ok: true, chat, reason: 'unregistered' };
+    }
     // Check for specific errors if needed
     if (res.json && res.json.error_code === 403) {
       removeChat(String(chat.chat_id), '403 Forbidden: not a member');
@@ -254,6 +271,9 @@ async function editAlbum(chat, existingMessageIds) {
       const json = await res.json();
 
       if (!json.ok) {
+        if (removeChatWithoutAdminRights(chat.chat_id, json)) {
+          return { ok: true, chat, reason: 'unregistered' };
+        }
         if (json.error_code === 400 && typeof json.description === 'string' && json.description.includes('message is not modified')) {
           // ok
         } else {
@@ -558,6 +578,7 @@ function updateStoredChatFields(chatId, effective) {
       // Edit
       if (isAlbumConfig) {
         const r = await editAlbum(effective, currentIds);
+        if (r && r.ok && r.reason === 'unregistered') { results.push(r); continue; }
         // if edit failed due to size mismatch (should be caught above) or other fatal, we might want to resend?
         // For now, simple edit.
         updateStoredChatFields(chatId, effective);
