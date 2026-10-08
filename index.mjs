@@ -39,6 +39,11 @@ function removeChatWithoutAdminRights(chatId, json) {
   return removeChat(String(chatId), json.description);
 }
 
+function removeChatOnForbidden(chatId, json) {
+  if (json?.error_code !== 403) return false;
+  return removeChat(String(chatId), json.description || '403 Forbidden');
+}
+
 // --- Telegram helpers for auto-registration via long polling ---
 
 function registerFromUpdates(updates) {
@@ -105,9 +110,7 @@ async function sendPhoto(chat) {
       if (removeChatWithoutAdminRights(chat.chat_id, json)) {
         return { ok: true, chat, reason: 'unregistered' };
       }
-      // Якщо бота прибрали з каналу — приберемо запис і не вважатимемо це збоєм
-      if (json.error_code === 403 && typeof json.description === 'string' && json.description.toLowerCase().includes('not a member')) {
-        removeChat(String(chat.chat_id), '403 Forbidden: not a member');
+      if (removeChatOnForbidden(chat.chat_id, json)) {
         return { ok: true, chat, reason: 'unregistered' };
       }
       // Форум-тред закрито (Bad Request: TOPIC_CLOSED) — вважаємо некритичною ситуацією: пропускаємо чат
@@ -152,6 +155,9 @@ async function editPhoto(chat, messageId) {
       if (removeChatWithoutAdminRights(chat.chat_id, json)) {
         return { ok: true, chat, reason: 'unregistered' };
       }
+      if (removeChatOnForbidden(chat.chat_id, json)) {
+        return { ok: true, chat, reason: 'unregistered' };
+      }
       // Обробка "message is not modified" як не-критичної ситуації
       if (json.error_code === 400 && typeof json.description === 'string' && json.description.includes('message is not modified')) {
         console.log(`NOT_MODIFIED for ${chat.chat_id}/${messageId} — content same, considered OK.`);
@@ -170,11 +176,6 @@ async function editPhoto(chat, messageId) {
         await deleteMessage(chat.chat_id, messageId);
         const sent = await sendPhoto(chat);
         return { ...sent, replaced: true };
-      }
-      // Якщо бота прибрали з каналу — приберемо запис і не вважатимемо це збоєм
-      if (json.error_code === 403 && typeof json.description === 'string' && json.description.toLowerCase().includes('not a member')) {
-        removeChat(String(chat.chat_id), '403 Forbidden: not a member');
-        return { ok: true, chat, reason: 'unregistered' };
       }
       console.error(`editMessageMedia ERROR for ${chat.chat_id}/${messageId}:`, JSON.stringify(json));
       return { ok: false, chat, json };
@@ -207,8 +208,7 @@ async function sendAlbum(chat) {
       return { ok: true, chat, reason: 'unregistered' };
     }
     // Check for specific errors if needed
-    if (res.json && res.json.error_code === 403) {
-      removeChat(String(chat.chat_id), '403 Forbidden: not a member');
+    if (removeChatOnForbidden(chat.chat_id, res.json)) {
       return { ok: true, chat, reason: 'unregistered' };
     }
     return { ok: false, chat, json: res.json };
@@ -272,6 +272,9 @@ async function editAlbum(chat, existingMessageIds) {
 
       if (!json.ok) {
         if (removeChatWithoutAdminRights(chat.chat_id, json)) {
+          return { ok: true, chat, reason: 'unregistered' };
+        }
+        if (removeChatOnForbidden(chat.chat_id, json)) {
           return { ok: true, chat, reason: 'unregistered' };
         }
         if (json.error_code === 400 && typeof json.description === 'string' && json.description.includes('message is not modified')) {
