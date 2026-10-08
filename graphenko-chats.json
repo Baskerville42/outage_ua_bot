@@ -16,9 +16,30 @@
     }
   },
   {
+    "-1001650634562": {
+      "message_id": 3830,
+      "image_url": "https://raw.githubusercontent.com/Baskerville42/outage-data-ua/refs/heads/main/images/kyiv-region/gpv-4-1-emergency.png",
+      "caption": "⚡️ Графік стабілізаційних відключень. Це повідомлення оновлюється щогодини автоматично."
+    }
+  },
+  {
+    "-1001659023650": {
+      "message_id": 3271,
+      "image_url": "https://raw.githubusercontent.com/Baskerville42/outage-data-ua/refs/heads/main/images/kyiv-region/gpv-4-1-emergency.png",
+      "caption": "⚡️ Графік стабілізаційних відключень. Це повідомлення оновлюється щогодини автоматично."
+    }
+  },
+  {
     "-1002142116428": {
       "message_id": 21,
       "image_url": "https://raw.githubusercontent.com/Baskerville42/outage-data-ua/refs/heads/main/images/dnipro/gpv-3-1-emergency.png",
+      "caption": "⚡️ Графік стабілізаційних вимкнень. Це повідомлення оновлюється щогодини автоматично."
+    }
+  },
+  {
+    "-1002172590360": {
+      "message_id": 2757,
+      "image_url": "https://raw.githubusercontent.com/Baskerville42/outage-data-ua/refs/heads/main/images/dnipro/gpv-4-2.png",
       "caption": "⚡️ Графік стабілізаційних вимкнень. Це повідомлення оновлюється щогодини автоматично."
     }
   },
@@ -39,6 +60,27 @@
     "-1002202607744": {
       "message_id": 31,
       "image_url": "https://raw.githubusercontent.com/Baskerville42/outage-data-ua/refs/heads/main/images/kyiv-region/gpv-all-today.png",
+      "caption": "⚡️ Графік стабілізаційних вимкнень. Це повідомлення оновлюється щогодини автоматично."
+    }
+  },
+  {
+    "-1002468823295": {
+      "message_id": 52516,
+      "image_url": "https://raw.githubusercontent.com/Baskerville42/outage-data-ua/refs/heads/main/images/kyiv-region/gpv-all-today.png",
+      "caption": "⚡️ Графік стабілізаційних вимкнень. Це повідомлення оновлюється щогодини автоматично."
+    }
+  },
+  {
+    "-1003307515521": {
+      "message_id": 453,
+      "image_url": "https://raw.githubusercontent.com/Baskerville42/outage-data-ua/refs/heads/main/images/dnipro/gpv-5-2-summary.png",
+      "caption": "⚡️ Графік стабілізаційних вимкнень. Це повідомлення оновлюється щогодини автоматично."
+    }
+  },
+  {
+    "-1003576748183": {
+      "message_id": 22,
+      "image_url": "https://raw.githubusercontent.com/Baskerville42/outage-data-ua/refs/heads/main/images/dnipro/gpv-4-2-summary.png",
       "caption": "⚡️ Графік стабілізаційних вимкнень. Це повідомлення оновлюється щогодини автоматично."
     }
   },
