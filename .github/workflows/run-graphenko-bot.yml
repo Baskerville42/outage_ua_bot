@@ -25,9 +25,11 @@ jobs:
           node-version: '18'
 
       - name: Run Telegram update script
+        id: update
         run: node index.mjs
 
       - name: Commit and push message map (if changed)
+        if: ${{ !cancelled() && (steps.update.outcome == 'success' || steps.update.outcome == 'failure') }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"

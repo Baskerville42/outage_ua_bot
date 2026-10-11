@@ -3,7 +3,7 @@ import { MAP_FILE, API_BASE, OUTAGE_IMAGES_BASE, DEFAULT_CAPTION } from './src/c
 import { loadMessageMapFromFile, saveMessageMapToFile } from './src/storage/messageMapIO.mjs';
 import { withTimestamp } from './src/utils/time.mjs';
 import { cacheBustedUrl, isValidOutageImageUrl, verifyRemotePng } from './src/utils/url.mjs';
-import { getMe, getUpdates, ackUpdates, pinMessage, deleteMessage, sendTextMessage, sendMediaGroup } from './src/telegram/api.mjs';
+import { getMe, getUpdates, ackUpdates, pinMessage as pinTelegramMessage, deleteMessage, sendTextMessage, sendMediaGroup, editMessageMedia } from './src/telegram/api.mjs';
 
 // Завантаження мапи chat_id -> { message_id }
 let mapWasNormalized = false;
@@ -33,7 +33,12 @@ function removeChat(chatId, reason = '') {
 
 function removeChatWithoutAdminRights(chatId, json) {
   if (json?.error_code !== 400 || typeof json.description !== 'string' ||
-      !json.description.toLowerCase().includes('need administrator rights in the channel chat')) {
+    ![
+      'need administrator rights in the channel chat',
+      'not enough rights',
+      'chat not found',
+      'user is deactivated'
+    ].some(reason => json.description.toLowerCase().includes(reason))) {
     return false;
   }
   return removeChat(String(chatId), json.description);
@@ -42,6 +47,14 @@ function removeChatWithoutAdminRights(chatId, json) {
 function removeChatOnForbidden(chatId, json) {
   if (json?.error_code !== 403) return false;
   return removeChat(String(chatId), json.description || '403 Forbidden');
+}
+
+async function pinMessage(chatId, messageId) {
+  const result = await pinTelegramMessage(chatId, messageId);
+  if (removeChatWithoutAdminRights(chatId, result.json) || removeChatOnForbidden(chatId, result.json)) {
+    return { ok: true, reason: 'unregistered' };
+  }
+  return result;
 }
 
 // --- Telegram helpers for auto-registration via long polling ---
@@ -123,7 +136,8 @@ async function sendPhoto(chat) {
     }
     const messageId = json.result && json.result.message_id;
     console.log(`SENT new message for chat_id=${chat.chat_id} -> message_id=${messageId}`);
-    await pinMessage(chat.chat_id, messageId);
+    const pinned = await pinMessage(chat.chat_id, messageId);
+    if (pinned.reason === 'unregistered') return { ok: true, chat, reason: 'unregistered' };
     return { ok: true, chat, message_id: messageId, result: json.result };
   } catch (err) {
     console.error(`Network error sendPhoto for ${chat.chat_id}:`, err.message);
@@ -132,7 +146,6 @@ async function sendPhoto(chat) {
 }
 
 async function editPhoto(chat, messageId) {
-  const url = `${API_BASE}/editMessageMedia`;
   const caption = withTimestamp(chat.caption);
   const photoUrl = cacheBustedUrl(chat.image_url);
   const payload = {
@@ -145,12 +158,7 @@ async function editPhoto(chat, messageId) {
     }
   };
   try {
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-    const json = await res.json();
+    const json = await editMessageMedia(payload);
     if (!json.ok) {
       if (removeChatWithoutAdminRights(chat.chat_id, json)) {
         return { ok: true, chat, reason: 'unregistered' };
@@ -161,7 +169,8 @@ async function editPhoto(chat, messageId) {
       // Обробка "message is not modified" як не-критичної ситуації
       if (json.error_code === 400 && typeof json.description === 'string' && json.description.includes('message is not modified')) {
         console.log(`NOT_MODIFIED for ${chat.chat_id}/${messageId} — content same, considered OK.`);
-        await pinMessage(chat.chat_id, messageId);
+        const pinned = await pinMessage(chat.chat_id, messageId);
+        if (pinned.reason === 'unregistered') return { ok: true, chat, reason: 'unregistered' };
         return { ok: true, chat, not_modified: true };
       }
       // Форум-тред закрито — пропускаємо без помилки
@@ -181,7 +190,8 @@ async function editPhoto(chat, messageId) {
       return { ok: false, chat, json };
     }
     console.log(`EDITED chat_id=${chat.chat_id} message_id=${messageId} OK`);
-    await pinMessage(chat.chat_id, messageId);
+    const pinned = await pinMessage(chat.chat_id, messageId);
+    if (pinned.reason === 'unregistered') return { ok: true, chat, reason: 'unregistered' };
     return { ok: true, chat, result: json.result };
   } catch (err) {
     console.error(`Network error editMessageMedia for ${chat.chat_id}/${messageId}:`, err.message);
@@ -221,7 +231,8 @@ async function sendAlbum(chat) {
 
   // Pin the first message
   if (messageIds.length > 0) {
-    await pinMessage(chat.chat_id, messageIds[0]);
+    const pinned = await pinMessage(chat.chat_id, messageIds[0]);
+    if (pinned.reason === 'unregistered') return { ok: true, chat, reason: 'unregistered' };
   }
 
   return { ok: true, chat, message_ids: messageIds, result: res.result };
@@ -250,7 +261,6 @@ async function editAlbum(chat, existingMessageIds) {
 
     // We reuse editPhoto logic but need to adapt it or call editMessageMedia directly
     // Let's call editMessageMedia directly here to avoid confusion
-    const url = `${API_BASE}/editMessageMedia`;
     const photoUrl = cacheBustedUrl(imgUrl);
     const payload = {
       chat_id: chat.chat_id,
@@ -263,12 +273,7 @@ async function editAlbum(chat, existingMessageIds) {
     };
 
     try {
-      const res = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      const json = await res.json();
+      const json = await editMessageMedia(payload);
 
       if (!json.ok) {
         if (removeChatWithoutAdminRights(chat.chat_id, json)) {
@@ -292,12 +297,17 @@ async function editAlbum(chat, existingMessageIds) {
     }
   }
 
+  if (results.some(result => !result.ok)) {
+    return { ok: false, chat, result: results };
+  }
+
   // If we are here, we attempted to edit all. 
   // We can consider it success even if some were not modified.
   console.log(`EDITED album for chat_id=${chat.chat_id} (count=${images.length})`);
   // Pin first one just in case
   if (existingMessageIds.length > 0) {
-    await pinMessage(chat.chat_id, existingMessageIds[0]);
+    const pinned = await pinMessage(chat.chat_id, existingMessageIds[0]);
+    if (pinned.reason === 'unregistered') return { ok: true, chat, reason: 'unregistered' };
   }
 
   return { ok: true, chat, result: results };
@@ -307,6 +317,9 @@ async function editAlbum(chat, existingMessageIds) {
 async function sendWelcomeMessage(chat_id) {
   const text = '🤖 GraphenkoBot був успішно підключений. Готовий до подальших команд.';
   const r = await sendTextMessage(chat_id, text);
+  if (removeChatWithoutAdminRights(chat_id, r.json) || removeChatOnForbidden(chat_id, r.json)) {
+    return { ok: true, reason: 'unregistered' };
+  }
   if (r.ok) {
     const messageId = r.result && r.result.message_id;
     if (!messageMap[chat_id]) messageMap[chat_id] = {};

@@ -51,12 +51,29 @@ export async function pinMessage(chat_id, message_id) {
   try {
     const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id, message_id, disable_notification: true }) });
     const json = await res.json();
-    if (!json.ok) { console.error(`pinChatMessage ERROR for ${chat_id}/${message_id}:`, JSON.stringify(json)); return { ok: false }; }
+    if (!json.ok) { console.error(`pinChatMessage ERROR for ${chat_id}/${message_id}:`, JSON.stringify(json)); return { ok: false, json }; }
     console.log(`PINNED chat_id=${chat_id} message_id=${message_id} OK`);
     return { ok: true };
   } catch (err) {
     console.error(`Network error pinChatMessage for ${chat_id}/${message_id}:`, err.message);
     return { ok: false };
+  }
+}
+
+export async function editMessageMedia(payload) {
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      const res = await fetch(`${API_BASE}/editMessageMedia`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      return await res.json();
+    } catch (err) {
+      if (attempt === 3) throw err;
+      console.warn(`Повтор редагування для ${payload.chat_id}/${payload.message_id} після мережевої помилки (${attempt}/3).`);
+      await new Promise(resolve => setTimeout(resolve, 500 * attempt));
+    }
   }
 }
 
