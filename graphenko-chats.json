@@ -51,7 +51,7 @@
   },
   {
     "-1002202607744": {
-      "message_id": 206,
+      "message_id": 210,
       "image_url": "https://raw.githubusercontent.com/Baskerville42/outage-data-ua/refs/heads/main/images/kyiv-region/gpv-all-today.png",
       "caption": "⚡️ Графік стабілізаційних вимкнень. Це повідомлення оновлюється щогодини автоматично."
     }
@@ -73,7 +73,7 @@
   },
   {
     "-1003831404717": {
-      "message_id": 61,
+      "message_id": 65,
       "image_url": "https://raw.githubusercontent.com/Baskerville42/outage-data-ua/refs/heads/main/images/kyiv/gpv-35-1-summary.png",
       "caption": "⚡️ Графік стабілізаційних вимкнень. Це повідомлення оновлюється щогодини автоматично."
     }
@@ -102,9 +102,6 @@
     "-2072251988441": {}
   },
   {
-    "-2073322835187": {}
-  },
-  {
     "1044121183": {
       "message_id": 802,
       "image_url": "https://raw.githubusercontent.com/Baskerville42/outage-data-ua/refs/heads/main/images/kyiv-region/gpv-2-2-emergency.png",
@@ -113,7 +110,7 @@
   },
   {
     "373266276": {
-      "message_id": 800,
+      "message_id": 812,
       "image_url": "https://raw.githubusercontent.com/Baskerville42/outage-data-ua/refs/heads/main/images/kyiv/gpv-10-1-emergency.png",
       "caption": "графік"
     }
@@ -127,15 +124,8 @@
   },
   {
     "813909688": {
-      "message_id": 784,
+      "message_id": 814,
       "image_url": "https://raw.githubusercontent.com/Baskerville42/outage-data-ua/refs/heads/main/images/kyiv/gpv-2-1-emergency.png",
-      "caption": "⚡️ Графік стабілізаційних вимкнень. Це повідомлення оновлюється щогодини автоматично."
-    }
-  },
-  {
-    "856841536": {
-      "message_id": 808,
-      "image_url": "https://raw.githubusercontent.com/Baskerville42/outage-data-ua/refs/heads/main/images/kyiv/gpv-3-2-emergency.png",
       "caption": "⚡️ Графік стабілізаційних вимкнень. Це повідомлення оновлюється щогодини автоматично."
     }
   }
