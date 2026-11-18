@@ -17,7 +17,7 @@
   },
   {
     "-1001624823173": {
-      "message_id": 96,
+      "message_id": 98,
       "image_url": "https://raw.githubusercontent.com/Baskerville42/outage-data-ua/refs/heads/main/images/kyiv/gpv-35-1-emergency.png",
       "caption": "⚡️ Графік стабілізаційних вимкнень. Це повідомлення оновлюється щогодини автоматично."
     }
@@ -51,14 +51,14 @@
   },
   {
     "-1002251988441": {
-      "message_id": 6849,
+      "message_id": 6852,
       "image_url": "https://raw.githubusercontent.com/Baskerville42/outage-data-ua/refs/heads/main/images/kyiv-region/gpv-all-today.png",
       "caption": "⚡️ Графік стабілізаційних вимкнень. Це повідомлення оновлюється щогодини автоматично."
     }
   },
   {
     "-1002468823295": {
-      "message_id": 77017,
+      "message_id": 77030,
       "image_url": "https://raw.githubusercontent.com/Baskerville42/outage-data-ua/refs/heads/main/images/kyiv-region/gpv-all-today.png",
       "caption": "⚡️ Графік стабілізаційних вимкнень. Це повідомлення оновлюється щогодини автоматично.",
       "welcome_message_id": 53657
@@ -83,7 +83,7 @@
   },
   {
     "-1003894459573": {
-      "message_id": 483,
+      "message_id": 486,
       "image_url": "https://raw.githubusercontent.com/Baskerville42/outage-data-ua/refs/heads/main/images/dnipro/gpv-all-today.png",
       "caption": "⚡️ Графік стабілізаційних вимкнень. Це повідомлення оновлюється щогодини автоматично."
     }
@@ -102,11 +102,8 @@
     }
   },
   {
-    "-2072251988441": {}
-  },
-  {
     "1044121183": {
-      "message_id": 928,
+      "message_id": 932,
       "image_url": "https://raw.githubusercontent.com/Baskerville42/outage-data-ua/refs/heads/main/images/kyiv-region/gpv-2-2-emergency.png",
       "caption": "⚡️ Графік стабілізаційних вимкнень. Це повідомлення оновлюється щогодини автоматично."
     }
@@ -127,7 +124,7 @@
   },
   {
     "813909688": {
-      "message_id": 926,
+      "message_id": 930,
       "image_url": "https://raw.githubusercontent.com/Baskerville42/outage-data-ua/refs/heads/main/images/kyiv/gpv-2-1-emergency.png",
       "caption": "⚡️ Графік стабілізаційних вимкнень. Це повідомлення оновлюється щогодини автоматично."
     }
