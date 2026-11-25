@@ -1,5 +1,5 @@
 blank_issues_enabled: false
 contact_links:
   - name: Питання щодо використання бота
-    url: https://github.com/Baskerville42/outage_ua_bot/discussions
-    about: Для загальних питань і порад використовуйте Discussions.
+    url: https://github.com/uapowerguardkit/outage-schedule-bot/issues
+    about: Для питань і пропозицій щодо бота використовуйте Issues.
