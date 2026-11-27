@@ -15,7 +15,7 @@
 1) Додайте бота до каналу/чату (бот надішле вітання і зареєструє `chat_id`).
 2) У каналі надішліть команду з URL зображення:
 ```
-/graphenko_image https://raw.githubusercontent.com/Baskerville42/outage-data-ua/refs/heads/main/images/kyiv/gpv-3-2-emergency.png
+/graphenko_image https://raw.githubusercontent.com/uapowerguardkit/outage-data-ua/refs/heads/main/images/kyiv/gpv-3-2-emergency.png
 ```
    Вимоги до URL: починається з .../images/ і закінчується на .png; ресурс має бути доступний.
 3) За потреби встановіть підпис:

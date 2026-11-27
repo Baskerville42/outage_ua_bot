@@ -1,8 +1,8 @@
-import { OUTAGE_IMAGES_BASE } from '../config/constants.mjs';
+import { OUTAGE_IMAGES_BASES } from '../config/constants.mjs';
 
 export function isValidOutageImageUrl(url) {
   if (typeof url !== 'string') return false;
-  if (!url.startsWith(OUTAGE_IMAGES_BASE)) return false;
+  if (!OUTAGE_IMAGES_BASES.some(base => url.startsWith(base))) return false;
   if (!url.toLowerCase().endsWith('.png')) return false;
   try { new URL(url); } catch { return false; }
   return true;
